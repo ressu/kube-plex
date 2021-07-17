@@ -45,6 +45,7 @@ func Test_filterPodEnv(t *testing.T) {
 		{"nothing to filter", []corev1.EnvVar{{Name: "SHELL", Value: "/bin/false"}}, []corev1.EnvVar{{Name: "SHELL", Value: "/bin/false"}}},
 		{"empty vars", []corev1.EnvVar{}, []corev1.EnvVar{}},
 		{"filter FFmpeg escaping", []corev1.EnvVar{{Name: "FFMPEG_EXTERNAL_LIBS", Value: "/path\\ to/codec"}}, []corev1.EnvVar{{Name: "FFMPEG_EXTERNAL_LIBS", Value: "/path to/codec"}}},
+		{"filter EAE root dir escaping", []corev1.EnvVar{{Name: "EAE_ROOT", Value: "/path\\ to/eae-root"}}, []corev1.EnvVar{{Name: "FFMPEG_EXTERNAL_LIBS", Value: "/path to/eae-root"}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -139,6 +139,7 @@ func Test_pmsMetadata_LauncherCmd(t *testing.T) {
 		{"generates bare cmd", PmsMetadata{PmsAddr: "a:32400"}, []string{"a"}, []string{"/shared/transcode-launcher", "--pms-addr=a:32400", "--listen=:32400", "--", "a"}},
 		{"generates codec server url", PmsMetadata{PmsAddr: "a:32400", PodIP: "1.2.3.4", CodecPort: 1234}, []string{"a"}, []string{"/shared/transcode-launcher", "--pms-addr=a:32400", "--listen=:32400", "--codec-server-url=http://1.2.3.4:1234/", "--codec-dir=/shared/codecs/", "--", "a"}},
 		{"generates debug flag", PmsMetadata{PmsAddr: "a:32400", KubePlexLevel: "debug"}, []string{"a"}, []string{"/shared/transcode-launcher", "--pms-addr=a:32400", "--listen=:32400", "--loglevel=debug", "--", "a"}},
+		{"generates eae root dir flag", PmsMetadata{PmsAddr: "a:32400", EaeRootDir: "/tmp/eae"}, []string{"a"}, []string{"/shared/transcode-launcher", "--pms-addr=a:32400", "--listen=:32400", "--eae-root-dir=/tmp/eae", "--", "a"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

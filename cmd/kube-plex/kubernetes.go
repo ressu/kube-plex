@@ -92,6 +92,9 @@ func filterPodEnv(in []corev1.EnvVar) []corev1.EnvVar {
 		case "FFMPEG_EXTERNAL_LIBS":
 			v.Value = ffmpeg.Unescape(v.Value)
 			out = append(out, v)
+		case "EAE_ROOT":
+			v.Value = ffmpeg.Unescape(v.Value)
+			out = append(out, v)
 		default:
 			out = append(out, v)
 		}

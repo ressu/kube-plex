@@ -17,6 +17,7 @@ var (
 	pmsAddr     = flag.String("pms-addr", "", "Address for the Plex Media Server instance (for example: '10.1.2.3:32400')")
 	codecServer = flag.String("codec-server-url", os.Getenv("CODEC_SERVER"), "URL for codec server (kube-plex)")
 	codecDir    = flag.String("codec-dir", os.Getenv("FFMPEG_EXTERNAL_LIBS"), "Directory to write codecs to, path will be created if doesn't exist")
+	eaeRootDir  = flag.String("eae-root-dir", os.Getenv("EAE_ROOT"), "Directory to use for EAE")
 	logLevel    = flag.String("loglevel", "", "Set the loglevel for transcoding process")
 )
 
@@ -52,6 +53,12 @@ func launch() int {
 		eCodecDir := ffmpeg.Escape(*codecDir)
 		klog.Infof("Updating environment, setting FFMPEG_EXTERNAL_LIBS to '%v'", eCodecDir)
 		os.Setenv("FFMPEG_EXTERNAL_LIBS", eCodecDir)
+	}
+
+	if *eaeRootDir != "" {
+        eEaeRootDir := ffmpeg.Escape(*eaeRootDir)
+		klog.Infof("Updating environment, setting EAE_ROOT to '%v'", eEaeRootDir)
+		os.Setenv("EAE_ROOT", eEaeRootDir)
 	}
 
 	if *pmsAddr == "" {

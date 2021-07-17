@@ -37,6 +37,7 @@ type PmsMetadata struct {
 	KubePlexImage    string               // container image for kube-plex
 	KubePlexLevel    string               // loglevel of kubeplex processes
 	CodecPort        int                  // port on which the codec service runs
+	EaeRootDir       string               // directory to use for EAE encoding/decoding
 	PmsImage         string               // container image used by Plex Media Server
 	PmsAddr          string               // URL for Plex Media Server
 }
@@ -236,6 +237,9 @@ func (p PmsMetadata) LauncherCmd(args ...string) []string {
 	}
 	if p.KubePlexLevel != "" {
 		a = append(a, fmt.Sprintf("--loglevel=%s", p.KubePlexLevel))
+	}
+	if p.EaeRootDir != "" {
+		a = append(a, fmt.Sprintf("--eae-root-dir=%s", p.EaeRootDir))
 	}
 	a = append(a, "--")
 	return append(a, args...)
