@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/munnerz/kube-plex/internal/ffmpeg"
 	"github.com/munnerz/kube-plex/internal/logger"
@@ -63,7 +64,7 @@ func launch() int {
 		// Create needed directories for FFMPEG in $EAE_ROOT
 		eaeDirs := [6]string{"Convert to Dolby Digital (High Quality - 640 kbps)", "Convert to Dolby Digital (Low Quality - 384 kbps)", "Convert to Dolby Digital Plus (High Quality - 384 kbps)", "Convert to Dolby Digital Plus (Max Quality - 1024 kbps)", "Convert to WAV (to 2ch or less)", "Convert to WAV (to 8ch or less)"}
 		for _, value := range eaeDirs {
-			eaeDir := eEaeRootDir + "/" + value
+			eaeDir := filepath.Join(eaeRootDir, value)
 			klog.Infof("Creating EAE required directory: %s", eaeDir)
 			if _, err := os.Stat(eaeDir); os.IsNotExist(err) {
 				os.MkdirAll(eaeDir, 0755)
