@@ -21,6 +21,7 @@ const (
 	kubePlexContainer     = "kube-plex/container-name"
 	kubePlexResourceReq   = "kube-plex/resources-requests"
 	kubePlexResourceLimit = "kube-plex/resources-limits"
+	eaeRootDir            = "kube-plex/eae-root-dir"
 )
 
 // PmsMetadata describes a Plex Media Server instance running in kubernetes.
@@ -90,6 +91,10 @@ func FetchMetadata(ctx context.Context, cl kubernetes.Interface, name, namespace
 		return PmsMetadata{}, fmt.Errorf("unable to determine kube-plex image (set init-container name with '%s' annotation): %v", kubePlexContainer, err)
 	}
 	m.KubePlexImage = kpimage
+
+	// EAE root dir override path
+	e := a[eaeRootDir]
+	m.EaeRootDir = e
 
 	// mounts to copy over
 	mlist, ok := a[pmsMounts]
