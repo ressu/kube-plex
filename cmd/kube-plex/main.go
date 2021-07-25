@@ -30,30 +30,7 @@ func main() {
 	l, _ := logger.NewPlexLogger("KubePlex", os.Getenv("X_PLEX_TOKEN"), "http://127.0.0.1:32400/")
 	klog.SetLogger(l)
 
-	if needBypass(os.Args) {
-		klog.Info("Bypassing kube-plex and launching original binary")
-		bypassKubePlex(ctx)
-		os.Exit(0)
-	}
-
-	// Main program start
-	codecPath := ffmpeg.Unescape(os.Getenv("FFMPEG_EXTERNAL_LIBS"))
-	var codecPort int
-	if codecPath != "" {
-		l, err := net.Listen("tcp", ":0")
-		if err != nil {
-			klog.Exitf("Failed to listen on any ports: %v", err)
-		}
-		codecPort = l.Addr().(*net.TCPAddr).Port
-		go func() {
-			err := startCodecServe(codecPath, l)
-			if err != nil {
-				klog.Errorf("Error from startCodecServe(): %v", err)
-			}
-		}()
-		klog.Infof("Codec server listening on port %d", codecPort)
-	}
-
+	// prepare for reading kube-plex information from Kubernetes API
 	cfg, err := rest.InClusterConfig()
 	if err != nil {
 		// fallback to local config for development
@@ -78,6 +55,31 @@ func main() {
 	m, err := FetchMetadata(ctx, kubeClient, podName, podNamespace)
 	if err != nil {
 		klog.Exitf("Error when fetching PMS pod metadata: %v", err)
+	}
+
+	// Check if we need to bypass remote transcoder process
+	if needBypass(os.Args, m) {
+		klog.Info("Bypassing kube-plex and launching original binary")
+		bypassKubePlex(ctx)
+		os.Exit(0)
+	}
+
+	// Start codec serving if needed.
+	codecPath := ffmpeg.Unescape(os.Getenv("FFMPEG_EXTERNAL_LIBS"))
+	var codecPort int
+	if codecPath != "" {
+		l, err := net.Listen("tcp", ":0")
+		if err != nil {
+			klog.Exitf("Failed to listen on any ports: %v", err)
+		}
+		codecPort = l.Addr().(*net.TCPAddr).Port
+		go func() {
+			err := startCodecServe(codecPath, l)
+			if err != nil {
+				klog.Errorf("Error from startCodecServe(): %v", err)
+			}
+		}()
+		klog.Infof("Codec server listening on port %d", codecPort)
 	}
 
 	// Write codecPort to pmsMetadata
@@ -141,7 +143,12 @@ func main() {
 }
 
 // Checks if bypass is needed
-func needBypass(args []string) bool {
+func needBypass(args []string, m PmsMetadata) bool {
+	// If EAE root has been set, we don't bypass remote transcoder
+	if m.EaeRootDir != "" {
+		return false
+	}
+
 	badArg, _ := regexp.Compile("^(e?ac3|truehd|mlp)_eae$")
 	for _, a := range args {
 		if badArg.Match([]byte(a)) {

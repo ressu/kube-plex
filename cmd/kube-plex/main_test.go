@@ -44,20 +44,25 @@ func TestMain(m *testing.M) {
 }
 
 func Test_needBypass(t *testing.T) {
+	type args struct {
+		args []string
+		m    PmsMetadata
+	}
 	tests := []struct {
 		name string
-		args []string
+		args args
 		want bool
 	}{
-		{"bypass aec3_eae", []string{"...", "-codec:1", "eac3_eae", "-eaeprefix:1", "..."}, true},
-		{"bypass ac3_eae", []string{"...", "-codec:1", "ac3_eae", "-eaeprefix:1", "..."}, true},
-		{"bypass truehd_eae", []string{"...", "-codec:1", "truehd_eae", "-eaeprefix:1", "..."}, true},
-		{"bypass mlp_eae", []string{"...", "-codec:1", "mlp_eae", "-eaeprefix:1", "..."}, true},
-		{"don't bypass with ac3", []string{"...", "-codec:1", "ac3", "-prefix:1", "..."}, false},
+		{"bypass aec3_eae", args{args: []string{"...", "-codec:1", "eac3_eae", "-eaeprefix:1", "..."}}, true},
+		{"bypass ac3_eae", args{args: []string{"...", "-codec:1", "ac3_eae", "-eaeprefix:1", "..."}}, true},
+		{"bypass truehd_eae", args{args: []string{"...", "-codec:1", "truehd_eae", "-eaeprefix:1", "..."}}, true},
+		{"bypass mlp_eae", args{args: []string{"...", "-codec:1", "mlp_eae", "-eaeprefix:1", "..."}}, true},
+		{"don't bypass with ac3", args{args: []string{"...", "-codec:1", "ac3", "-prefix:1", "..."}}, false},
+		{"don't bypass if explicit eae root is set", args{args: []string{"...", "-codec:1", "mlp_eae", "-eaeprefix:1", "..."}, m: PmsMetadata{EaeRootDir: "/eaeroot"}}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := needBypass(tt.args); got != tt.want {
+			if got := needBypass(tt.args.args, tt.args.m); got != tt.want {
 				t.Errorf("needBypass() = %v, want %v", got, tt.want)
 			}
 		})
