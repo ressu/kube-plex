@@ -77,10 +77,10 @@ pod. Kube-plex replaces the `Plex Transcoder` binary with a launcher on Plex
 startup. Kube-plex launcher processes the arguments from Plex and creates a
 transcoding job to handle the final transcoding.
 
-```bash
-ubuntu@wanted-wolf:~$ kubectl get pod,job
+```
+$ kubectl get pod,job
 NAME                                        READY   STATUS    RESTARTS   AGE
-pod/kube-plex-694d659b64-7wg2b   1/1     Running   0          6d23h
+pod/kube-plex-694d659b64-7wg2b              1/1     Running   0          6d23h
 pod/pms-elastic-transcoder-tqw5s-8w2bc      1/1     Running   0          4s
 
 NAME                                     COMPLETIONS   DURATION   AGE
