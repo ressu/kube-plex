@@ -60,11 +60,11 @@ needs to be defined with `--set persistence.transcode.claimName` or by defining
 the relevant parameters separately.
 
 ```bash
-➜  helm install plex ./charts/kube-plex \
+helm install plex ./charts/kube-plex \
     --namespace plex \
     --set claimToken=[insert claim token here] \
-    --set persistence.data.claimName=existing-pms-data-pvc \
-    --set persistence.transcode.claimName=shared-pms-transcode-pvc \
+    --set persistence.data.claimName=[existing-pms-data-pvc] \
+    --set persistence.transcode.claimName=[shared-pms-transcode-pvc] \
     --set ingress.enabled=true
 ```
 
