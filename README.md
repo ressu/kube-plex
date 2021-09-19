@@ -5,6 +5,9 @@ distributes transcode jobs by creating jobs in a Kubernetes cluster to perform
 transcodes, instead of running transcodes on the Plex Media Server instance
 itself.
 
+[ressu/kube-plex](https://github.com/ressu/kube-plex) is a fork from
+[munnerz/kube-plex](https://github.com/munnerz/kube-plex).
+
 ## How it works
 
 kube-plex works by replacing the Plex Transcoder program on the main PMS
@@ -25,22 +28,36 @@ transcodes work right now.
 
 ## Setup
 
-This guide will go through setting up a Plex Media Server instance on a
-Kubernetes cluster, configured to launch transcode jobs on the same cluster
-in pods created in the same 'plex' namespace.
+This guide describes a way to configure Kube-plex with a Plex Media Server instance on a
+Kubernetes cluster. Provided helm chart is intended as both a reference and an
+easy way of creating a kube-plex deployment. Advanced users are encouraged to
+explore deployment options and to contribute additional deployment examples.
 
-1) Obtain a Plex Claim Token by visiting [plex.tv/claim](https://plex.tv/claim).
-This will be used to bind your new PMS instance to your own user account
-automatically.
+### Plex claim token
 
-2) Deploy the Helm chart included in this repository using the claim token
-obtained in step 1.
+Create a Plex Claim Token by visiting [plex.tv/claim](https://plex.tv/claim). 
+Plex claim token is used to associate a Plex instance with a Plex account. Claim
+token expires automatically within minutes of creating the token. If Plex
+instance fails to register with Plex Account when creating a new deployment, a
+good troubleshooting step is to recreate the claim token and deployment.
+
+Claim token isn't the only way to register an instance to a Plex Account. See
+"Access Plex Dashboard" below.
+
+### Helm chart deployment
+
+Create a helm deployment using the provided helm chart. Claim token and other
+chart configuration is defined with the `--set` flags. Available configuration
+options are described in the [chart](charts/kube-plex/README.md) and in more
+detail in [values.yaml](charts/kube-plex/values.yaml).
 
 If you have pre-existing persistent volume claims for your
 media, you can specify its name with `--set persistence.data.claimName`. If not
 specified, a persistent volume will be automatically provisioned for you.
 
-In order for the transcoding to work, a shared transcode persistent volume claim needs to be defined with `--set persistence.transcode.claimName` or by defining the relevant parameters separately.
+In order for the transcoding to work, a shared transcode persistent volume claim
+needs to be defined with `--set persistence.transcode.claimName` or by defining
+the relevant parameters separately.
 
 ```bash
 ➜  helm install plex ./charts/kube-plex \
@@ -54,15 +71,19 @@ In order for the transcoding to work, a shared transcode persistent volume claim
 This will deploy a scalable Plex Media Server instance that uses Kubernetes as
 a backend for executing transcode jobs.
 
-3) Access the Plex dashboard. If you used claim token above, the plex instance
-should be visible in [Plex Web App](https://app.plex.tv). If the token
-registration failed, access the instance using using `kubectl port-forward`.
+### Access Plex Dashboard
 
-The instance can be accessed via the load balancer IP (via `kubectl get
-service`) or the ingress (if provisioned with `--set ingress.enabled=true`) once
-the registration has been completed.
+If you used claim token, the plex instance should be visible in [Plex Web
+App](https://app.plex.tv). If the token registration failed, access the instance
+using using `kubectl -n plex port-forward <pod name> 32400`.
 
-4) Visit Settings->Server->Network and add your pod network subnet to the
+Once the registration has been completed, the instance can be accessed via the
+load balancer IP (via `kubectl get service`) or the ingress (if provisioned with
+`--set ingress.enabled=true`).
+
+### Set pod network allowlist
+
+Visit Settings->Server->Network and add your pod network subnet to the
 `List of IP addresses and networks that are allowed without auth` (near the
 bottom). For example, `10.100.0.0/16` is the subnet that pods in my cluster are
 assigned IPs from, so I enter `10.100.0.0/16` in the box.
