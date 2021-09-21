@@ -64,6 +64,7 @@ helm install plex ./charts/kube-plex \
     --namespace plex \
     --set claimToken=[insert claim token here] \
     --set persistence.data.claimName=[existing-pms-data-pvc] \
+    --set persistence.transcode.enabled=true \
     --set persistence.transcode.claimName=[shared-pms-transcode-pvc] \
     --set ingress.enabled=true
 ```
