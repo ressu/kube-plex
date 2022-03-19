@@ -17,7 +17,7 @@ kubePlex:
 claimToken: ""
 
 # Set the timezone of the plex server
-timezone: Europe/London
+timezone: Europe/Amsterdam
 
 service:
   type: ClusterIP
@@ -41,7 +41,7 @@ service:
   # externalTrafficPolicy: Cluster
 
 ingress:
-  enabled: false
+  enabled: true
   # Used to create an Ingress record.
   hosts:
     - chart-example.local
