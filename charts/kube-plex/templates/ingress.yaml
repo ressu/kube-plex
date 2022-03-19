@@ -20,10 +20,10 @@ spec:
       http:
         paths:
           - path: /
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
-                name:  {{ $serviceName }}
+                name: {{ $serviceName }}
                 port:
                   name: pms
     {{- end -}}
