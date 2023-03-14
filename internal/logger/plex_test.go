@@ -11,7 +11,7 @@ import (
 )
 
 func TestPlexLogger_getURL(t *testing.T) {
-	l := &PlexLogger{}
+	l := &PlexLogSink{}
 	want, _ := url.Parse("http://127.0.0.1:32400/log")
 
 	if got := l.getURL(); !reflect.DeepEqual(got, *want) {
@@ -19,7 +19,7 @@ func TestPlexLogger_getURL(t *testing.T) {
 	}
 
 	want, _ = url.Parse("http://test:1234/log")
-	l = &PlexLogger{plexURL: want}
+	l = &PlexLogSink{plexURL: want}
 
 	got := l.getURL()
 	if !reflect.DeepEqual(got, *want) {
@@ -31,22 +31,17 @@ func TestPlexLogger_send(t *testing.T) {
 	type args struct {
 		level int
 		msg   string
-		kvs   []interface{}
 	}
 	tests := []struct {
-		name      string
-		keyValues map[string]interface{}
-		token     string
-		args      args
-		level     int
-		message   string
+		name    string
+		token   string
+		args    args
+		level   int
+		message string
 	}{
-		{"plain message is sent", map[string]interface{}{}, "PTOKEN", args{level: PlexLogInfo, msg: "test"}, PlexLogInfo, "test"},
-		{"level is respected", map[string]interface{}{}, "PTOKEN", args{level: PlexLogError, msg: "test"}, PlexLogError, "test"},
-		{"message is sent when there is no token", map[string]interface{}{}, "", args{level: PlexLogInfo, msg: "test"}, PlexLogInfo, "test"},
-		{"struct kv is sent", map[string]interface{}{"key": "value", "key2": "value2"}, "PTOKEN", args{level: PlexLogInfo, msg: "test"}, PlexLogInfo, "test [key:value key2:value2]"},
-		{"message args are sent", map[string]interface{}{}, "PTOKEN", args{level: PlexLogInfo, msg: "test", kvs: []interface{}{"key", 1, "key2", "value2"}}, PlexLogInfo, "test [key:1 key2:value2]"},
-		{"message args and struct kv are sent", map[string]interface{}{"skey": 2, "skey2": "svalue2"}, "PTOKEN", args{level: PlexLogInfo, msg: "test", kvs: []interface{}{"key", 1, "key2", "value2"}}, PlexLogInfo, "test [skey:2 skey2:svalue2 key:1 key2:value2]"},
+		{"plain message is sent", "PTOKEN", args{level: PlexLogInfo, msg: "test"}, PlexLogInfo, "test"},
+		{"level is respected", "PTOKEN", args{level: PlexLogError, msg: "test"}, PlexLogError, "test"},
+		{"message is sent when there is no token", "", args{level: PlexLogInfo, msg: "test"}, PlexLogInfo, "test"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -80,13 +75,11 @@ func TestPlexLogger_send(t *testing.T) {
 
 			u, _ := url.Parse(ts.URL)
 
-			l := &PlexLogger{
+			l := &PlexLogSink{
 				plexURL:   u,
 				plexToken: tt.token,
-				keyValues: tt.keyValues,
-				name:      "test",
 			}
-			l.send(tt.args.level, tt.args.msg, tt.args.kvs...)
+			l.send("test", tt.args.level, tt.args.msg)
 		})
 	}
 }

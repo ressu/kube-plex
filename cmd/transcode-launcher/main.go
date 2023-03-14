@@ -30,7 +30,7 @@ func launch() int {
 	flag.Parse()
 
 	// Set up logging.
-	l, _ := logger.NewPlexLogger("KubePlexProxy", os.Getenv("X_PLEX_TOKEN"), fmt.Sprintf("http://%s/", *pmsAddr))
+	l, _ := logger.NewPlexLogger("KubePlexProxy", os.Getenv("X_PLEX_TOKEN"), fmt.Sprintf("http://%s/", *pmsAddr), logger.Options{})
 	klog.SetLogger(l)
 
 	// Main launcher start

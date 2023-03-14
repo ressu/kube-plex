@@ -27,7 +27,7 @@ func main() {
 
 	// Set up logging. We can assume that Plex is running on localhost.. that's
 	// what the Plex Transcoder is built to expect too.
-	l, _ := logger.NewPlexLogger("KubePlex", os.Getenv("X_PLEX_TOKEN"), "http://127.0.0.1:32400/")
+	l, _ := logger.NewPlexLogger("KubePlex", os.Getenv("X_PLEX_TOKEN"), "http://127.0.0.1:32400/", logger.Options{})
 	klog.SetLogger(l)
 
 	if needBypass(os.Args) {

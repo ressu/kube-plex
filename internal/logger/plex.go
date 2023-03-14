@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
+	"github.com/go-logr/logr/funcr"
 )
 
 // Log levels known by Plex
@@ -23,106 +24,78 @@ const (
 // NewPlexLogger returns a PlexLogger instance that has URL preset
 //
 // URL should be the base url for Plex Media Server, `/log` path will be added
-func NewPlexLogger(name, token, plexurl string) (*PlexLogger, error) {
+func NewPlexLogger(name, token, plexurl string, opts Options) (logr.Logger, error) {
 	u, err := url.Parse(plexurl)
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse url: %v", err)
+		return logr.Logger{}, fmt.Errorf("unable to parse url: %v", err)
 	}
 
 	u.Path = strings.TrimSuffix(u.Path, "/") + "/log"
 
-	return &PlexLogger{
+	fopts := funcr.Options{
+		Verbosity: opts.Verbosity,
+	}
+
+	l := &PlexLogSink{
+		Formatter: funcr.NewFormatter(fopts),
+
 		plexURL:   u,
 		plexToken: token,
-		name:      name,
-	}, nil
+	}
+	return logr.New(l.WithName(name)), nil
 }
 
-// PlexLogger is a single instance of Plex which is used for logging
-type PlexLogger struct {
+type Options struct {
+	// Verbosity tells the logger which V logs to write. Higher values enable more logs.
+	// Default is 0
+	Verbosity int
+}
+
+// PlexLogSink is a single instance of Plex which is used for logging
+type PlexLogSink struct {
+	funcr.Formatter
+
 	plexURL   *url.URL // Plex url, includes plex source. (http://127.0.0.1:32400/?source=Transcoder)
 	plexToken string   // Plex token for authentication
-
-	name      string
-	keyValues map[string]interface{}
 }
 
-// Enabled tests whether this Logger is enabled.
-// For now we assume that the logger is always enabled
-func (*PlexLogger) Enabled() bool {
-	return true
-}
+// Init is not implemented for PlexLogSink
+func (PlexLogSink) Init(_ logr.RuntimeInfo) {}
 
 // Info level logs are written directly to Plex
-func (l *PlexLogger) Info(msg string, kvs ...interface{}) {
-	l.send(PlexLogInfo, msg, kvs...)
+func (l PlexLogSink) Info(level int, msg string, kvs ...interface{}) {
+	prefix, m := l.FormatInfo(level, msg, kvs)
+	l.send(prefix, PlexLogInfo, m)
 }
 
 // Error logs will have the error message passed as error key
-func (l *PlexLogger) Error(err error, msg string, kvs ...interface{}) {
-	if err != nil {
-		kvs = append(kvs, "error", err)
-	}
-	l.send(PlexLogError, msg, kvs...)
-}
-
-// V returns a logger with the given verbosity
-//
-// In practice, this only adds a verbosity label to the log entry
-func (l *PlexLogger) V(v int) logr.Logger {
-	return l.WithValues("verbosity", v)
+func (l PlexLogSink) Error(err error, msg string, kvs ...interface{}) {
+	prefix, m := l.FormatError(err, msg, kvs)
+	l.send(prefix, PlexLogError, m)
 }
 
 // WithName adds an element to the logger name
-func (l *PlexLogger) WithName(name string) logr.Logger {
-	return &PlexLogger{
-		plexURL:   l.plexURL,
-		plexToken: l.plexToken,
-		name:      l.name + "." + name,
-		keyValues: l.keyValues,
-	}
+func (l PlexLogSink) WithName(name string) logr.LogSink {
+	l.Formatter.AddName(name)
+	return &l
 }
 
 // WithValues adds key value pairs to the logger
-func (l *PlexLogger) WithValues(kvs ...interface{}) logr.Logger {
-	newMap := make(map[string]interface{}, len(l.keyValues)+len(kvs)/2)
-	for k, v := range l.keyValues {
-		newMap[k] = v
-	}
-	for i := 0; i < len(kvs); i += 2 {
-		newMap[kvs[i].(string)] = kvs[i+1]
-	}
-
-	return &PlexLogger{
-		plexURL:   l.plexURL,
-		plexToken: l.getPlexToken(),
-		name:      l.name,
-		keyValues: newMap,
-	}
+func (l PlexLogSink) WithValues(kvs ...interface{}) logr.LogSink {
+	l.Formatter.AddValues(kvs)
+	return &l
 }
 
 // send message to PMS. Wrap all key value pairs to a text string since Plex has
 // no concept of metadata other than message level.
 //
 // The request includes Plex token if it's available through the environment
-func (l *PlexLogger) send(level int, msg string, kvs ...interface{}) {
-	kvmsg := []string{}
-	for k, v := range l.keyValues {
-		kvmsg = append(kvmsg, fmt.Sprintf("%s:%+v", k, v))
-	}
-	for i := 0; i < len(kvs); i += 2 {
-		kvmsg = append(kvmsg, fmt.Sprintf("%s:%+v", kvs[i], kvs[i+1]))
-	}
-
-	if len(kvmsg) > 0 {
-		msg = fmt.Sprintf("%s %+v", msg, kvmsg)
-	}
-
+func (l PlexLogSink) send(prefix string, level int, msg string) {
 	u := l.getURL()
 	q := u.Query()
 	q.Set("level", fmt.Sprintf("%d", level))
 	q.Set("message", msg)
-	q.Set("source", l.name)
+	q.Set("source", prefix)
 	u.RawQuery = q.Encode()
 
 	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
@@ -145,7 +118,7 @@ func (l *PlexLogger) send(level int, msg string, kvs ...interface{}) {
 }
 
 // getURL returns either the set URL or the default URL if unset
-func (l *PlexLogger) getURL() url.URL {
+func (l PlexLogSink) getURL() url.URL {
 	if l.plexURL == nil {
 		u, _ := url.Parse("http://127.0.0.1:32400/log")
 		return *u
@@ -155,7 +128,7 @@ func (l *PlexLogger) getURL() url.URL {
 
 // getPlexToken returns the plex token from struct if it exists or falls back to
 // X_PLEX_TOKEN environment variable
-func (l *PlexLogger) getPlexToken() string {
+func (l PlexLogSink) getPlexToken() string {
 	if l.plexToken != "" {
 		return l.plexToken
 	}
