@@ -142,7 +142,7 @@ func getNodeSelector(nodeSelector, defname string, pod *corev1.Pod) (map[string]
 	if n != nil {
                 return n
 	} else {
-		return  map[string]string{"kubernetes.io/arch": "amd64"}
+		return  map[string]string{}
         }
 }
 
