@@ -29,6 +29,7 @@ type PmsMetadata struct {
 	Namespace        string               // Pod Namespace
 	UID              types.UID            // Pod UID
 	PodIP            string               // Pod IP address
+	NodeSelector     map[string]string    // Dict of node labels
 	Mounts           []string             // List of mounts (paths) to copy to transcoder
 	VolumeMounts     []corev1.VolumeMount // kube-plex volume mounts
 	Volumes          []corev1.Volume      // kube-plex needed volumes
@@ -57,10 +58,10 @@ func FetchMetadata(ctx context.Context, cl kubernetes.Interface, name, namespace
 	}
 
 	m := PmsMetadata{
-		Name:      pod.GetName(),
-		Namespace: pod.GetNamespace(),
-		UID:       pod.GetUID(),
-		PodIP:     pod.Status.PodIP,
+		Name:            pod.GetName(),
+		Namespace:       pod.GetNamespace(),
+		UID:             pod.GetUID(),
+		PodIP:           pod.Status.PodIP,
 	}
 
 	// Get PMS URL
@@ -82,6 +83,8 @@ func FetchMetadata(ctx context.Context, cl kubernetes.Interface, name, namespace
 		return PmsMetadata{}, fmt.Errorf("unable to determine Plex Media server image (set container name with '%s' annotation): %v", pmsContainer, err)
 	}
 	m.PmsImage = pmsimage
+
+        m.NodeSelector = getNodeSelector(pmsContainer, "plex", pod)
 
 	// Kube-Plex container image
 	kpimage, _, err := getContainerImage(kubePlexContainer, "kube-plex-init", pod, pod.Status.InitContainerStatuses)
@@ -131,6 +134,16 @@ func (p PmsMetadata) ResourceRequirements() corev1.ResourceRequirements {
 		Limits:   p.ResourceLimits,
 		Requests: p.ResourceRequests,
 	}
+}
+
+// getNodeSelector from pod spec based on the selectors given
+func getNodeSelector(nodeSelector, defname string, pod *corev1.Pod) (map[string]string) {
+	n := pod.Spec.NodeSelector
+	if n != nil {
+                return n
+	} else {
+		return  map[string]string{"kubernetes.io/arch": "amd64"}
+        }
 }
 
 // getContainerImage from pod status based on the annotation given
