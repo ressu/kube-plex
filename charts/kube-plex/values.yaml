@@ -51,6 +51,9 @@ extraEnv: {}
   # NVIDIA_VISIBLE_DEVICES: all
   # NVIDIA_DRIVER_CAPABILITIES: video,compute,utility
 
+# Set the runtime class
+## runtimeClassName: nvidia
+
 service:
   type: ClusterIP
   port: 32400
