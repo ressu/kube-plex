@@ -15,6 +15,8 @@ The following tables lists the configurable parameters of the Plex chart and the
 | `kubePlex.image.pullPolicy`         | Image pull policy | `IfNotPresent` |
 | `claimToken`                 | Plex Claim Token to authenticate your acount | `` |
 | `timezone`                 | Timezone plex instance should run as, e.g. 'America/New_York' | `Europe/London` |
+| `extraEnv`                 | Extra Environment variables to set, e.g. 'puid,pgid' | `[]` |
+| `runtimeClassName`         | Run time class name, e.g. 'nvidia' | `` |
 | `service.type`          | Kubernetes service type for the plex GUI/API | `ClusterIP` |
 | `service.port`          | Kubernetes port where the plex GUI/API is exposed| `32400` |
 | `service.annotations`   | Service annotations for the Plex GUI | `{}` |
