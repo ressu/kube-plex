@@ -19,11 +19,11 @@ spec:
   {{- end }}
   rules:
     {{- range $host := .Values.ingress.hosts }}
-    - host: {{ $host }}
+    - host: {{ $host.host }}
       http:
         paths:
-          - path: /
-            pathType: ImplementationSpecific
+          - path: {{ $host.path | default "/" }}
+            pathType: {{ $host.pathType | default "ImplementationSpecific" }}
             backend:
               service:
                 name: {{ $serviceName }}
