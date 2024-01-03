@@ -102,8 +102,6 @@ spec:
         ports:
           - name: pms
             containerPort: {{ .Values.service.port }}
-          - name: http
-            containerPort: {{ .Values.service.port }}
           - name: https
             containerPort: 32443
         env:
