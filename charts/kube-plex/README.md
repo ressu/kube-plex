@@ -35,6 +35,7 @@ The following tables lists the configurable parameters of the Plex chart and the
 | `ingress.enabled`              | Enables Ingress | `false` |
 | `ingress.annotations`          | Ingress annotations | `{}` |
 | `ingress.labels`               | Custom labels | `{}` |
+| `ingress.ingressClass`         | Ingress class | `nil` |
 | `ingress.path`                 | Ingress path | `/` |
 | `ingress.hosts`                | Ingress accepted hostnames | `chart-example.local` |
 | `ingress.tls`                  | Ingress TLS configuration | `[]` |
