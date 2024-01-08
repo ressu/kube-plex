@@ -125,6 +125,7 @@ ingress:
   # To use a non-default ingress class uncomment the line below
   # ingressClass: myClass
   # Used to create an Ingress record.
+  # For backwards compatibility, a string array of hosts is also allowed i.e. `hosts: ['chart-example.local']`
   hosts:
     - host: chart-example.local
       # path: /
