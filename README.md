@@ -1,5 +1,8 @@
 # kube-plex
 
+> [!NOTE]
+> There seems to be an issue with using Kube-Plex with the latest plex as the transcoding doesn't return data properly. I've mostly moved away from using Plex so I won't be trying to work around the issue.
+
 kube-plex is a scalable Plex Media Server solution for Kubernetes. It
 distributes transcode jobs by creating jobs in a Kubernetes cluster to perform
 transcodes, instead of running transcodes on the Plex Media Server instance
